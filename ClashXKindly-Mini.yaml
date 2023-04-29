@@ -5,8 +5,8 @@
 mixed-port: 7890
 mode: rule
 allow-lan: true
-log-level: info
-external-controller: 0.0.0.0:9090
+log-level: silent
+external-controller: 127.0.0.1:9090
 
 pvd-info: &pvd-info
   type: http

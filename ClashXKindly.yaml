@@ -7,48 +7,72 @@
 
 # mixed-port HTTP(S) and SOCKS5 使用同一端口7890
 mixed-port: 7890
-redir-port: 7892
+# Linux 和 macOS 的 redir 透明代理端口 (重定向 TCP 和 TProxy UDP 流量)
+#redir-port: 7892
+# Linux 的透明代理端口（适用于 TProxy TCP 和 TProxy UDP 流量)
+#tproxy-port: 7893
 
 # 规则模式 rule（规则） / global（全局代理）/ direct（全局直连）
 mode: rule
+# 允许局域网的连接 用于局域网内共享代理
 allow-lan: true
 
 # 5 个级别 silent / info / warning / error / debug
 log-level: info
 
-# RESTful API for clash
-external-controller: 0.0.0.0:9090
+# RESTful API for clash 不建议暴露到外网
+external-controller: 127.0.0.1:9090
+# 使用 0.0.0.0 时请务必设定口令以保证安全
+# secret: ""
 
-# DNS 服务器配置 按需启用
+# DNS 服务器配置 按需启用 若不配置程序内置的 DNS 服务会被关闭
 dns:
-  enable: false
+  enable: false # 无特殊需求不建议启用
   listen: 0.0.0.0:53
-  # 增强模式 按需启用
+  # 增强模式 fake-ip 或 redir-host(已不建议使用)
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
+  # 以下列表的域名将不会被解析为 fake ip 这些域名相关的解析请求将会返回它们真实的 IP 地址
+  # 详细参见 https://github.com/Hackl0us/SS-Rule-Snippet/blob/master/LAZY_RULES/Clash_Premium.yaml
   fake-ip-filter:
-    - "*.lan"
+    - '*.lan'
+    - time.*.com
+    - time.*.gov
+    - time.*.edu.cn
+    - time.*.apple.com
+    - ntp.*.com
+    - '*.ntp.org.cn'
+    - '+.pool.ntp.org'
     - localhost.ptlogin2.qq.com
+    - 'music.163.com'
+    - '*.music.163.com'
     - +.srv.nintendo.net
     - +.stun.playstation.net
     - +.msftconnecttest.com
     - +.msftncsi.com
     - +.xboxlive.com
-    - "*.blzstatic.cn"
+    - '*.blzstatic.cn'
+    - '*.mcdn.bilivideo.cn'
+    - '*.localhost'
+  # 所有 DNS 请求将会直接发送到服务器 不经过任何代理
   nameserver:
     - 223.5.5.5
     - 119.29.29.29
+  # 当 fallback 参数被配置时 DNS 请求将同时发送至上方 nameserver 列表和下方 fallback 列表中配置的所有 DNS 服务器
+  # 当解析得到的 IP 地址的地理位置不是 CN 时 clash 将会选用 fallback 中 DNS 服务器的解析结果
   fallback:
     - 8.8.8.8
     - 1.1.1.1
     - tls://dns.google:853
     - https://cloudflare-dns.com/dns-query
     - https://dns.google/dns-query
+  # 这些参数是为了对抗DNS投毒 建议在 DNS 投毒严重时启用
   fallback-filter:
     geoip: true
     geoip-code: CN
     ipcidr:
       - 240.0.0.0/4
+      - 0.0.0.0/32
 
 # proxy-providers参数锚点 方便多订阅源复用
 pvd-info: &pvd-info
@@ -194,11 +218,20 @@ proxy-groups:
       - 🚀 手动切换
       - 🇺🇲 美国节点
       - 🇯🇵 日本节点
-  # - name: 🆎 AdBlock # 广告过滤分组 已用其他广告过滤工具不建议在Clash中再启用
+  # - name: 🆎 AdBlock # 广告过滤分组 已用其他过滤工具不建议Clash中再启用
   #   type: select
   #   proxies:
   #     - REJECT
   #     - DIRECT
+  # 代理转发链 在 proxies 中不应该包含 relay 不支持 UDP 适用于落地鸡解决跳 IP 问题
+  # 流量 clash <-> http <-> vmess <-> ss1 <-> ss2 <-> 互联网
+  # - name: relay
+  #   type: relay
+  #   proxies: # 注意proxies中不能有 relay
+  #     - http
+  #     - vmess
+  #     - ss1
+  #     - ss2
   - name: 🔧 自定节点
     type: select
     proxies:
@@ -236,7 +269,7 @@ proxy-groups:
     use:
       - US-Node
 
-# 定义规则集参数锚点 interval 3 天更新一次足够
+# 定义规则集参数锚点 interval 3 天更新一次足够 Meta 核心不需要 type 和 path 参数
 rule-info: &rule-info
   type: http
   interval: 259200
