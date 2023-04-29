@@ -1,0 +1,331 @@
+# --------------------------------ClashX Kindly Config-----------------------------------------------
+# @Version 1.0.0
+# @rules https://github.com/Loyalsoldier/clash-rules
+# @rules https://github.com/blackmatrix7/ios_rule_script
+# --------------------------------ClashX Kindly Config-----------------------------------------------
+
+# mixed-port HTTP(S) and SOCKS5 使用同一端口7890
+mixed-port: 7890
+redir-port: 7892
+
+# 规则模式 rule（规则） / global（全局代理）/ direct（全局直连）
+mode: rule
+allow-lan: true
+
+# 5 个级别 silent / info / warning / error / debug
+log-level: info
+
+# RESTful API for clash
+external-controller: 0.0.0.0:9090
+
+# DNS 服务器配置 按需启用
+dns:
+  enable: false
+  listen: 0.0.0.0:53
+  # 增强模式 按需启用
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter:
+    - "*.lan"
+    - localhost.ptlogin2.qq.com
+    - +.srv.nintendo.net
+    - +.stun.playstation.net
+    - +.msftconnecttest.com
+    - +.msftncsi.com
+    - +.xboxlive.com
+    - "*.blzstatic.cn"
+  nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+  fallback:
+    - 8.8.8.8
+    - 1.1.1.1
+    - tls://dns.google:853
+    - https://cloudflare-dns.com/dns-query
+    - https://dns.google/dns-query
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+    ipcidr:
+      - 240.0.0.0/4
+
+# proxy-providers参数锚点 方便多订阅源复用
+pvd-info: &pvd-info
+  # 更新订阅周期 3天
+  interval: 259200
+  # 节点状态检查
+  health-check:
+    enable: true
+    url: http://www.gstatic.com/generate_204
+    interval: 86400
+
+# clash 链接无须转换 节点订阅转换 https://sub.xeton.dev/sub?target=clash&url=订阅链接多个用|分割&list=true&udp=false
+# 可选其他订阅转换工具 推荐选择输出为 NodeList 也可处理节点过滤等
+proxy-providers:
+  Subscribe:
+    # 代理提供商类型 http|file
+    type: http
+    # 引用参数锚点
+    <<: *pvd-info
+    # 排除关键字使用exclude参数(UrlCode编码)例如要排除"海外|到期"在链接后追加 &exclude=%E6%B5%B7%E5%A4%96%7C%E5%88%B0%E6%9C%9F
+    url: https://sub.xeton.dev/sub?target=clash&url=订阅链接多个用|分割&list=true&udp=false&exclude=%E6%B5%B7%E5%A4%96%7C%E5%88%B0%E6%9C%9F
+    # 订阅内容保存路径
+    path: ./Providers/Proxies/Subscribe.yaml
+    # filter: 'HK|TW|US' # 过滤节点 Golang regex不支持复杂表达式 复杂规则建议用订阅转换工具过滤
+  # ========引用当前已有clash配置文件示例========
+  # MyConfig:
+  #   type: file
+  #   path: MyConfig.yaml # 当前已有配置文件path
+  #   health-check:
+  #     enable: true
+  #     interval: 36000
+  #     url: http://www.gstatic.com/generate_204
+  #   filter: 'JP|VN|SG'
+
+  # 定义节点过滤参数锚点
+  filter-info: &filter-info
+    type: file
+    path: ./Providers/Proxies/Subscribe.yaml
+
+  # 代理组中不支持 filter 在这处理
+  HK-Node:
+    <<: *filter-info
+    filter: '港|HK|(?i)Hong'
+  TW-Node:
+    <<: *filter-info
+    filter: '台|湾|TW|(?i)Taiwan'
+  JP-Node:
+    <<: *filter-info
+    filter: '日|东京|JP|(?i)Japan'
+  SG-Node:
+    <<: *filter-info
+    filter: '新|坡|獅|SG|(?i)Singapore'
+  US-Node:
+    <<: *filter-info
+    filter: '美|US|(?i)States|American'
+
+# 使用proxy-providers中的节点 定义锚点
+all-proxy: &all-proxy
+  type: select
+  use:
+    - Subscribe
+    # - MyConfig # 引用已有配置文件
+
+# 其他代理 自建等写在这里
+proxies:
+  - name: "ss1"
+    type: ss
+    server: server
+    port: 443
+    cipher: chacha20-ietf-poly1305
+    password: "password"
+    # udp: true
+
+  - name: "ss2"
+    type: ss
+    server: server
+    port: 443
+    cipher: chacha20-ietf-poly1305
+    password: "password"
+    plugin: obfs
+    plugin-opts:
+      mode: tls # or http
+      # host: bing.com
+
+# 其他代理锚点
+local-proxy: &local-proxy
+  - ss1
+  - ss2
+
+# 定义自动测速节点
+auto: &auto-select
+  type: url-test
+  lazy: true
+  url: http://www.gstatic.com/generate_204
+  # 节点检测 间隔10分钟
+  interval: 600
+  use:
+    - Subscribe
+    # - MyConfig # 引用已有配置文件
+
+# 定义分流参数锚点
+group-proxy: &group-proxy
+  type: select
+  proxies:
+    - 🚀 手动切换
+    - ♻️ 自动选择
+    - 🇭🇰 香港节点
+    - 🇨🇳 台湾节点
+    - 🇯🇵 日本节点
+    - 🇸🇬 狮城节点
+    - 🇺🇲 美国节点
+    - DIRECT
+
+# 定义代理分组 与锚点合并
+proxy-groups:
+  - name: 🚀 手动切换
+    <<: *all-proxy
+    proxies:
+      - ♻️ 自动选择
+  - name: ♻️ 自动选择
+    <<: *auto-select
+    proxies:
+      # 添加自定义节点
+      # - ss1
+      # - ss2
+  - name: 🌍 国外媒体
+    type: select
+    <<: *group-proxy
+    proxies:
+      - 🚀 手动切换
+      - DIRECT
+  - name: 🍎 苹果服务
+    <<: *group-proxy
+  - name: 📺 哔哩哔哩
+    type: select
+    proxies:
+      - DIRECT
+      - 🇭🇰 香港节点
+      - 🇨🇳 台湾节点
+  - name: 🤖 OpenAi
+    type: select
+    proxies:
+      - 🚀 手动切换
+      - 🇺🇲 美国节点
+      - 🇯🇵 日本节点
+  # - name: 🆎 AdBlock # 广告过滤分组 已用其他广告过滤工具不建议在Clash中再启用
+  #   type: select
+  #   proxies:
+  #     - REJECT
+  #     - DIRECT
+  - name: 🔧 自定节点
+    type: select
+    proxies:
+      *local-proxy
+  - name: 🐟 漏网之鱼
+    <<: *group-proxy
+
+ # 节点按地区分组 Core 不支持此种过滤 Meta可以直接用
+  # - name: 🇭🇰 香港节点
+  #   <<: *all-proxy
+  #   filter: '港|HK|(?i)Hong'
+  # - name: 🇨🇳 台湾节点
+  #   <<: *all-proxy
+  #   filter: '台|湾|TW|(?i)Taiwan'
+
+ # 节点按地区分组 当前手动选择节点 可参考auto-select锚点改为自动选择
+  - name: 🇭🇰 香港节点
+    type: select
+    use:
+      - HK-Node
+  - name: 🇨🇳 台湾节点
+    type: select
+    use:
+      - TW-Node
+  - name: 🇯🇵 日本节点
+    type: select
+    use:
+      - JP-Node
+  - name: 🇸🇬 狮城节点
+    type: select
+    use:
+      - SG-Node
+  - name: 🇺🇲 美国节点
+    type: select
+    use:
+      - US-Node
+
+# 定义规则集参数锚点 interval 3 天更新一次足够
+rule-info: &rule-info
+  type: http
+  interval: 259200
+# classical 不推荐使用 复杂度较高不建议添加太多
+classical: &rule-classical
+  behavior: classical
+  <<: *rule-info
+# domain or ipcidr 推荐使用 匹配更高效
+domain: &rule-domain
+  behavior: domain
+  <<: *rule-info
+ipcidr: &rule-ipcidr
+  behavior: ipcidr
+  <<: *rule-info
+
+# 引用规则集
+rule-providers:
+  Apple:
+    <<: *rule-domain
+    url: https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/apple.txt
+    path: ./Providers/Ruleset/Apple.yaml
+  iCloud:
+    <<: *rule-domain
+    url: https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/icloud.txt
+    path: ./Providers/Ruleset/iCloud.yaml
+  Direct:
+    <<: *rule-domain
+    url: https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/direct.txt
+    path: ./Providers/Ruleset/Direct.yaml
+  Private:
+    <<: *rule-domain
+    url: https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/private.txt
+    path: ./Providers/Ruleset/Private.yaml
+  Proxy:
+    <<: *rule-domain
+    url: https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/proxy.txt
+    path: ./Providers/Ruleset/Proxy.yaml
+  GFWList:
+    <<: *rule-domain
+    url: https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/gfw.txt
+    path: ./Providers/Ruleset/GFWList.yaml
+  Applications:
+    <<: *rule-classical
+    url: https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/applications.txt
+    path: ./Providers/Ruleset/Applications.yaml
+  BiliBili:
+    <<: *rule-classical
+    url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/BiliBili/BiliBili.yaml
+    path: ./Providers/Ruleset/BiliBili.yaml
+  GlobalMedia:
+    <<: *rule-classical
+    url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/GlobalMedia/GlobalMedia.yaml
+    path: ./Providers/Ruleset/GlobalMedia.yaml
+  Cncidr:
+    <<: *rule-ipcidr
+    url: https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/cncidr.txt
+    path: ./Providers/Ruleset/Cncidr.yaml
+  # anti-AD的广告过滤 按需启用
+  # Ad:
+  #   <<: *rule-domain
+  #   url: https://anti-ad.net/clash.yaml
+  #   path: ./Providers/Ruleset/anti-ad-clash.yaml
+
+# 自定义规则
+rules:
+  - RULE-SET,Applications,DIRECT
+  - RULE-SET,Private,DIRECT
+  - RULE-SET,Cncidr,DIRECT
+  - RULE-SET,Direct,DIRECT
+  - RULE-SET,Apple,🍎 苹果服务
+  - RULE-SET,iCloud,🍎 苹果服务
+  - RULE-SET,BiliBili,📺 哔哩哔哩
+  - RULE-SET,GlobalMedia,🌍 国外媒体
+  - RULE-SET,Proxy,🚀 手动切换
+  # - RULE-SET,Ad,🆎 AdBlock # 广告过滤 按需启用
+  - GEOIP,LAN,DIRECT # GEOIP LAN 和 CN 使用直连
+  - GEOIP,CN,DIRECT # 普通用户这两个就够
+  # ========其他自定义规则示例========
+  - DOMAIN-SUFFIX,ai.com,🤖 OpenAi # 域名后缀匹配 使用代理组
+  - DOMAIN-SUFFIX,openai.com,🤖 OpenAi
+  - DOMAIN-SUFFIX,identrust.com,🤖 OpenAi
+  - IP-CIDR,162.159.193.0/24,DIRECT # IP 段匹配 Cloudflare
+  - DOMAIN-SUFFIX,umeng.co,REJECT # REJECT 广告拦截
+  - DOMAIN-SUFFIX,umeng.com,REJECT
+  - DOMAIN-SUFFIX,umtrack.com,REJECT
+  - DOMAIN-SUFFIX,a.market.xiaomi.com,REJECT
+  - DOMAIN-SUFFIX,ad.xiaomi.com,REJECT
+  - DOMAIN-SUFFIX,ad1.xiaomi.com,REJECT
+
+  # 上面规则都未命中
+  - MATCH,🐟 漏网之鱼 # 使用漏网之鱼分组,可以理解为黑名单模式
+  # - MATCH, DIRECT # 直连 即白名单模式 配合下方GFWList效果更佳
+  # - RULE-SET,GFWList,🚀 手动切换
