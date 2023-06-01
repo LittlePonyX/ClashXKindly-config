@@ -82,7 +82,7 @@ pvd-info: &pvd-info
   health-check:
     enable: true
     url: http://www.gstatic.com/generate_204
-    interval: 86400
+    interval: 600
 
 # clash 链接无须转换 节点订阅转换 https://sub.xeton.dev/sub?target=clash&url=订阅链接多个用|分割&list=true&udp=false
 # 可选其他订阅转换工具 推荐选择输出为 NodeList 也可处理节点过滤等
