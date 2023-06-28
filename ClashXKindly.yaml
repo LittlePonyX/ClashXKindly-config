@@ -48,9 +48,7 @@ dns:
     - "*.mcdn.bilivideo.cn"
     - "*.localhost"
   # 所有 DNS 请求将会直接发送到服务器 不经过任何代理
-  nameserver:
-    - 223.5.5.5
-    - 119.29.29.29
+  nameserver: [223.5.5.5, 119.29.29.29]
   # 当 fallback 参数被配置时 DNS 请求将同时发送至上方 nameserver 列表和下方 fallback 列表中配置的所有 DNS 服务器
   # 当解析得到的 IP 地址的地理位置不是 CN 时 clash 将会选用 fallback 中 DNS 服务器的解析结果
   fallback:
@@ -63,9 +61,7 @@ dns:
   fallback-filter:
     geoip: true
     geoip-code: CN
-    ipcidr:
-      - 240.0.0.0/4
-      - 0.0.0.0/32
+    ipcidr: [240.0.0.0/4, 0.0.0.0/32]
 
 # proxy-providers参数锚点 方便多订阅源复用
 pvd-info: &pvd-info # 更新订阅周期 3天
@@ -77,7 +73,7 @@ pvd-info: &pvd-info # 更新订阅周期 3天
     interval: 600
 
 # clash 链接无须转换 节点订阅转换 https://sub.xeton.dev/sub?target=clash&url=订阅链接多个用|分割&list=true&udp=false
-# 可选其他订阅转换工具 推荐选择输出为 NodeList 也可处理节点过滤等
+# 可选自建或其他订阅转换工具 推荐选择输出为 NodeList 也可处理节点过滤
 proxy-providers:
   Subscribe:
     # 代理提供商类型 http|file
@@ -88,8 +84,8 @@ proxy-providers:
     url: https://sub.xeton.dev/sub?target=clash&url=订阅链接多个用|分割&list=true&udp=false&exclude=%E6%B5%B7%E5%A4%96%7C%E5%88%B0%E6%9C%9F
     # 订阅内容保存路径
     path: ./Providers/Proxies/Subscribe.yaml
-    # filter: 'HK|TW|US' # 过滤节点 Golang regex不支持复杂表达式 复杂规则建议用订阅转换工具过滤
-  # ========引用当前已有clash配置文件示例========
+    # filter: 'HK|TW|US' # 过滤节点 Golang regex不支持复杂表达式 建议用订阅转换工具过滤
+  # ======== 引用当前已有clash配置文件示例 ========
   # MyConfig:
   #   type: file
   #   path: MyConfig.yaml # 当前已有配置文件path
@@ -97,7 +93,7 @@ proxy-providers:
   #     enable: true
   #     interval: 36000
   #     url: http://www.gstatic.com/generate_204
-  #   filter: 'JP|VN|SG'
+  #   filter: 'HK|JP|VN|SG'
 
   # 定义节点过滤参数锚点
   filter-info: &filter-info
@@ -125,7 +121,7 @@ proxy-providers:
 all-proxy: &all-proxy
   type: select
   use:
-    - Subscribe
+    - Subscribe # 引用订阅文件
     # - MyConfig # 引用已有配置文件
 
 # 其他代理 自建等写在这里
@@ -157,14 +153,16 @@ auto: &auto-select
 group-proxy: &group-proxy
   type: select
   proxies:
-    - 🚀 手动切换
-    - ♻️ 自动选择
-    - 🇭🇰 香港节点
-    - 🇨🇳 台湾节点
-    - 🇯🇵 日本节点
-    - 🇸🇬 狮城节点
-    - 🇺🇲 美国节点
-    - DIRECT
+    [
+      🚀 手动切换,
+      ♻️ 自动选择,
+      🇭🇰 香港节点,
+      🇨🇳 台湾节点,
+      🇯🇵 日本节点,
+      🇸🇬 狮城节点,
+      🇺🇲 美国节点,
+      DIRECT,
+    ]
 
 # 定义代理分组 与锚点合并
 proxy-groups:
@@ -172,6 +170,7 @@ proxy-groups:
     <<: *all-proxy
     proxies:
       - ♻️ 自动选择
+      # - 🔧 自定节点 # 按需是否使用自定义节点
   - name: ♻️ 自动选择
     <<: *auto-select
     proxies:
@@ -181,34 +180,25 @@ proxy-groups:
   - name: 🌍 国外媒体
     type: select
     <<: *group-proxy
-    proxies:
-      - 🚀 手动切换
-      - DIRECT
+    proxies: [🚀 手动切换, DIRECT]
   - name: 🍎 苹果服务
     <<: *group-proxy
   - name: 📺 哔哩哔哩
     type: select
-    proxies:
-      - DIRECT
-      - 🇭🇰 香港节点
-      - 🇨🇳 台湾节点
+    proxies: [DIRECT, 🇭🇰 香港节点, 🇨🇳 台湾节点]
   - name: 🤖 OpenAi
     type: select
-    proxies:
-      - 🚀 手动切换
-      - 🇺🇲 美国节点
-      - 🇯🇵 日本节点
+    proxies: [🚀 手动切换, 🇺🇲 美国节点, 🇯🇵 日本节点]
   # - name: 🆎 AdBlock # 广告过滤分组 已用其他过滤工具不建议Clash中再启用
   #   type: select
-  #   proxies:
-  #     - REJECT
-  #     - DIRECT
-  # 代理转发链 在 proxies 中不应该包含 relay 不支持 UDP 适用于落地鸡解决跳 IP 问题
-  # 流量 clash <-> http <-> vmess <-> ss1 <-> ss2 <-> 互联网
-  # - name: relay
+  #   proxies: [REJECT, DIRECT]
+
+  # 代理转发链 relay 示例 新版本推荐使用更快速的 tunnels 模式
+  # proxies 中不应该包含 relay 节点 不支持 UDP
+  # 流量示意 clash <-> vmess <-> ss1 <-> 互联网 (这样是为了用自建节点落地解决机场跳 IP 问题)
+  # - name: 🔁 relay
   #   type: relay
-  #   proxies: # 注意proxies中不能有 relay
-  #     - http
+  #   proxies: # !!!注意proxies中不能有relay节点
   #     - vmess
   #     - ss1
   - name: 🔧 自定节点
@@ -217,7 +207,7 @@ proxy-groups:
   - name: 🐟 漏网之鱼
     <<: *group-proxy
 
-  # 节点按地区分组示例 Core 不支持此种过滤 Meta 可以直接用
+  # Meta 核心节点按地区分组示例 (Clash Premium 不支持此种过滤)
   # - name: 🇭🇰 香港节点
   #   <<: *all-proxy
   #   filter: '港|HK|(?i)Hong'

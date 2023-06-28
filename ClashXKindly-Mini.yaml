@@ -15,14 +15,14 @@ pvd-info: &pvd-info
     url: http://www.gstatic.com/generate_204
     interval: 600
 
-# clash 链接无须转换 也可选其他节点订阅转换工具 推荐选择输出为 NodeList 处理节点过滤等
+# clash 链接无须转换 可自建或选择其他订阅转换工具 推荐选择输出为 NodeList 处理节点过滤
 proxy-providers:
   Subscribe:
     <<: *pvd-info
     # 排除关键字使用exclude参数(UrlCode编码)例如要排除"海外|到期"在链接后追加 &exclude=%E6%B5%B7%E5%A4%96%7C%E5%88%B0%E6%9C%9F
     url: https://sub.xeton.dev/sub?target=clash&url=订阅链接多个用|分割&list=true&udp=false&exclude=%E6%B5%B7%E5%A4%96%7C%E5%88%B0%E6%9C%9F
     path: ./Providers/Proxies/Subscribe.yaml
-    # filter: 'a|b' # 过滤节点 Golang regex不支持复杂表达式 复杂规则建议用订阅转换工具过滤
+    # filter: 'a|b' # 过滤节点 Golang regex 不支持复杂表达式建议用订阅转换工具过滤
 all-proxy: &all-proxy
   type: select
   use:
@@ -38,6 +38,7 @@ proxies:
     password: "password"
     udp: true
 # - name: "ss2" ...
+# 数量多引用锚点进行合并
 local-proxy: &local-proxy
   - ss1
 
