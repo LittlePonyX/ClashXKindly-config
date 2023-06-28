@@ -1,21 +1,21 @@
 # --------------------------------ClashX Kindly Config Mini-----------------------------------------------
 # @GitHub https://github.com/LittlePonyX/ClashXKindly-config
-# @Version 1.0.0
+# @Version 1.0.1
 # --------------------------------ClashX Kindly Config Mini-----------------------------------------------
 mixed-port: 7890
 mode: rule
-allow-lan: true
-log-level: silent
 external-controller: 127.0.0.1:9090
+secret: "ytYJ42g92tjU@!%z"
 
 pvd-info: &pvd-info
   type: http
-  interval: 259200
+  interval: 259200 # 3天
   health-check:
     enable: true
     url: http://www.gstatic.com/generate_204
     interval: 600
-# clash 链接无须转换也可选其他节点订阅转换工具 推荐选择输出为 NodeList 处理节点过滤等
+
+# clash 链接无须转换 也可选其他节点订阅转换工具 推荐选择输出为 NodeList 处理节点过滤等
 proxy-providers:
   Subscribe:
     <<: *pvd-info
@@ -28,7 +28,7 @@ all-proxy: &all-proxy
   use:
     - Subscribe
 
-# 其他代理 自建等写在这里
+# 其他代理示例 自建等写在这里
 proxies:
   - name: "ss1"
     type: ss
@@ -36,83 +36,45 @@ proxies:
     port: 443
     cipher: chacha20-ietf-poly1305
     password: "password"
-    # udp: true
-  # - name: "ss2" ...
+    udp: true
+# - name: "ss2" ...
 local-proxy: &local-proxy
   - ss1
-
-auto: &auto-select
-  type: url-test
-  lazy: true
-  url: http://www.gstatic.com/generate_204
-  interval: 600
-  use:
-    - Subscribe
 
 proxy-groups:
   - name: 🚀 手动切换
     <<: *all-proxy
-    proxies:
-      - ♻️ 自动选择
+    proxies: [♻️ 自动选择]
   - name: ♻️ 自动选择
-    <<: *auto-select
+    type: url-test
+    lazy: true
+    url: http://www.gstatic.com/generate_204
+    interval: 600
+    use:
+      - Subscribe
     proxies:
-    # - ss1 # 把自定义节点添加进自动选择
-    # *local-proxy # 或者引用锚点进行合并
-  - name: 🌍 国外媒体
-    type: select
-    <<: *all-proxy
-    proxies:
-      - 🚀 手动切换
-      - DIRECT
-  - name: 🔧 自定节点
-    type: select
-    proxies:
-      *local-proxy
-  - name: 🛑 全球拦截
-    type: select
-    proxies:
-      - REJECT
-      - DIRECT
+      #- ss1 # 把自定义节点添加进自动选择
+      #*local-proxy # 数量多引用锚点进行合并
+
   - name: 🐟 漏网之鱼
     <<: *all-proxy
-    proxies:
-      - 🚀 手动切换
-      - DIRECT
+    proxies: [🚀 手动切换, DIRECT]
 
 rules:
   - GEOIP,CN,DIRECT
   - GEOIP,LAN,DIRECT
-  - IP-CIDR,162.159.193.0/24,DIRECT
-  - DOMAIN-SUFFIX,ai.com,🚀 手动切换
-  - DOMAIN-SUFFIX,openai.com,🚀 手动切换
-  - DOMAIN-SUFFIX,disney-plus.net,🌍 国外媒体
-  - DOMAIN-SUFFIX,disneyplus.com,🌍 国外媒体
-  - DOMAIN-SUFFIX,hulu.com,🌍 国外媒体
-  - DOMAIN-SUFFIX,netflix.com,🌍 国外媒体
-  - DOMAIN-SUFFIX,netflix.net,🌍 国外媒体
-  - DOMAIN-SUFFIX,nflxext.com,🌍 国外媒体
-  - IP-CIDR,108.175.32.0/20,🌍 国外媒体,no-resolve
-  - IP-CIDR,185.2.220.0/22,🌍 国外媒体,no-resolve
-  - IP-CIDR,185.9.188.0/22,🌍 国外媒体,no-resolve
-  - IP-CIDR,192.173.64.0/18,🌍 国外媒体,no-resolve
-  - IP-CIDR,198.38.96.0/19,🌍 国外媒体,no-resolve
-  - IP-CIDR,198.45.48.0/20,🌍 国外媒体,no-resolve
-  - IP-CIDR,207.45.72.0/22,🌍 国外媒体,no-resolve
-  - IP-CIDR,208.75.76.0/22,🌍 国外媒体,no-resolve
+  - DOMAIN,google.com,🚀 手动切换
   - DOMAIN-SUFFIX,t.me,🚀 手动切换
-  - DOMAIN-SUFFIX,tdesktop.com,🚀 手动切换
   - DOMAIN-SUFFIX,telegra.ph,🚀 手动切换
   - DOMAIN-SUFFIX,telegram.me,🚀 手动切换
   - DOMAIN-SUFFIX,telegram.org,🚀 手动切换
+  - IP-CIDR,162.159.193.0/24,DIRECT
   - IP-CIDR,91.108.0.0/16,🚀 手动切换,no-resolve
   - IP-CIDR,109.239.140.0/24,🚀 手动切换,no-resolve
   - IP-CIDR,149.154.160.0/20,🚀 手动切换,no-resolve
-  - DOMAIN-SUFFIX,umeng.co,🛑 全球拦截
-  - DOMAIN-SUFFIX,umeng.com,🛑 全球拦截
-  - DOMAIN-SUFFIX,umtrack.com,🛑 全球拦截
-  - DOMAIN-SUFFIX,a.market.xiaomi.com,🛑 全球拦截
-  - DOMAIN-SUFFIX,ad.xiaomi.com,🛑 全球拦截
-  - DOMAIN-SUFFIX,ad1.xiaomi.com,🛑 全球拦截
-  - MATCH,🐟 漏网之鱼 # 都未匹配到使用漏网之鱼,可以理解为黑名单模式
-  # - MATCH, DIRECT # 直连 即白名单模式
+  - DOMAIN-SUFFIX,umeng.com,REJECT
+  - DOMAIN-SUFFIX,umtrack.com,REJECT
+  - DOMAIN-SUFFIX,ad.xiaomi.com,REJECT
+  - DOMAIN-SUFFIX,ad1.xiaomi.com,REJECT
+  - MATCH,🐟 漏网之鱼 # 未匹配到使用漏网之鱼 可以理解为黑名单模式
+  # - MATCH, DIRECT # 未匹配到使用直连 即白名单模式

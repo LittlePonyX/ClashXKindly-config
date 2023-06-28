@@ -1,29 +1,22 @@
 # --------------------------------ClashX Kindly Config-----------------------------------------------
 # @GitHub https://github.com/LittlePonyX/ClashXKindly-config
-# @Version 1.0.0
+# @Version 1.0.1
 # @rules https://github.com/Loyalsoldier/clash-rules
 # @rules https://github.com/blackmatrix7/ios_rule_script
 # --------------------------------ClashX Kindly Config-----------------------------------------------
 
 # mixed-port HTTP(S) and SOCKS5 使用同一端口7890
 mixed-port: 7890
-# Linux 和 macOS 的 redir 透明代理端口 (重定向 TCP 和 TProxy UDP 流量)
-#redir-port: 7892
-# Linux 的透明代理端口（适用于 TProxy TCP 和 TProxy UDP 流量)
-#tproxy-port: 7893
-
 # 规则模式 rule（规则） / global（全局代理）/ direct（全局直连）
 mode: rule
 # 允许局域网的连接 用于局域网内共享代理
 allow-lan: true
-
 # 5 个级别 silent / info / warning / error / debug
 log-level: info
 
-# RESTful API for clash 不建议暴露到外网
+# RESTful API for clash 使用 0.0.0.0 时请务必设定口令以保证安全
 external-controller: 127.0.0.1:9090
-# 使用 0.0.0.0 时请务必设定口令以保证安全
-# secret: ""
+secret: "ytYJ42g92tjU@!%z"
 
 # DNS 服务器配置 按需启用 若不配置程序内置的 DNS 服务会被关闭
 dns:
@@ -35,25 +28,25 @@ dns:
   # 以下列表的域名将不会被解析为 fake ip 这些域名相关的解析请求将会返回它们真实的 IP 地址
   # 详细参见 https://github.com/Hackl0us/SS-Rule-Snippet/blob/master/LAZY_RULES/Clash_Premium.yaml
   fake-ip-filter:
-    - '*.lan'
+    - "*.lan"
     - time.*.com
     - time.*.gov
     - time.*.edu.cn
     - time.*.apple.com
     - ntp.*.com
-    - '*.ntp.org.cn'
-    - '+.pool.ntp.org'
+    - "*.ntp.org.cn"
+    - "+.pool.ntp.org"
     - localhost.ptlogin2.qq.com
-    - 'music.163.com'
-    - '*.music.163.com'
+    - "music.163.com"
+    - "*.music.163.com"
     - +.srv.nintendo.net
     - +.stun.playstation.net
     - +.msftconnecttest.com
     - +.msftncsi.com
     - +.xboxlive.com
-    - '*.blzstatic.cn'
-    - '*.mcdn.bilivideo.cn'
-    - '*.localhost'
+    - "*.blzstatic.cn"
+    - "*.mcdn.bilivideo.cn"
+    - "*.localhost"
   # 所有 DNS 请求将会直接发送到服务器 不经过任何代理
   nameserver:
     - 223.5.5.5
@@ -75,8 +68,7 @@ dns:
       - 0.0.0.0/32
 
 # proxy-providers参数锚点 方便多订阅源复用
-pvd-info: &pvd-info
-  # 更新订阅周期 3天
+pvd-info: &pvd-info # 更新订阅周期 3天
   interval: 259200
   # 节点状态检查
   health-check:
@@ -115,19 +107,19 @@ proxy-providers:
   # 代理组中不支持 filter 在这处理
   HK-Node:
     <<: *filter-info
-    filter: '港|HK|(?i)Hong'
+    filter: "港|HK|(?i)Hong"
   TW-Node:
     <<: *filter-info
-    filter: '台|湾|TW|(?i)Taiwan'
+    filter: "台|湾|TW|(?i)Taiwan"
   JP-Node:
     <<: *filter-info
-    filter: '日|东京|JP|(?i)Japan'
+    filter: "日|东京|JP|(?i)Japan"
   SG-Node:
     <<: *filter-info
-    filter: '新|坡|獅|SG|(?i)Singapore'
+    filter: "新|坡|獅|SG|(?i)Singapore"
   US-Node:
     <<: *filter-info
-    filter: '美|US|(?i)States|American'
+    filter: "美|US|(?i)States|American"
 
 # 使用proxy-providers中的节点 定义锚点
 all-proxy: &all-proxy
@@ -145,22 +137,10 @@ proxies:
     cipher: chacha20-ietf-poly1305
     password: "password"
     # udp: true
-
-  - name: "ss2"
-    type: ss
-    server: server
-    port: 443
-    cipher: chacha20-ietf-poly1305
-    password: "password"
-    plugin: obfs
-    plugin-opts:
-      mode: tls # or http
-      # host: bing.com
-
+  # - name: "ss2" ...
 # 其他代理锚点
 local-proxy: &local-proxy
   - ss1
-  - ss2
 
 # 定义自动测速节点
 auto: &auto-select
@@ -231,15 +211,13 @@ proxy-groups:
   #     - http
   #     - vmess
   #     - ss1
-  #     - ss2
   - name: 🔧 自定节点
     type: select
-    proxies:
-      *local-proxy
+    proxies: *local-proxy
   - name: 🐟 漏网之鱼
     <<: *group-proxy
 
- # 节点按地区分组 Core 不支持此种过滤 Meta可以直接用
+  # 节点按地区分组示例 Core 不支持此种过滤 Meta 可以直接用
   # - name: 🇭🇰 香港节点
   #   <<: *all-proxy
   #   filter: '港|HK|(?i)Hong'
@@ -247,7 +225,7 @@ proxy-groups:
   #   <<: *all-proxy
   #   filter: '台|湾|TW|(?i)Taiwan'
 
- # 节点按地区分组 当前手动选择节点 可参考auto-select锚点改为自动选择
+  # 节点按地区分组 当前手动选择节点 可参考auto-select锚点改为自动选择
   - name: 🇭🇰 香港节点
     type: select
     use:
@@ -281,9 +259,6 @@ classical: &rule-classical
 domain: &rule-domain
   behavior: domain
   <<: *rule-info
-ipcidr: &rule-ipcidr
-  behavior: ipcidr
-  <<: *rule-info
 
 # 引用规则集
 rule-providers:
@@ -295,10 +270,6 @@ rule-providers:
     <<: *rule-domain
     url: https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/icloud.txt
     path: ./Providers/Ruleset/iCloud.yaml
-  Direct:
-    <<: *rule-domain
-    url: https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/direct.txt
-    path: ./Providers/Ruleset/Direct.yaml
   Private:
     <<: *rule-domain
     url: https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/private.txt
@@ -311,10 +282,6 @@ rule-providers:
     <<: *rule-domain
     url: https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/gfw.txt
     path: ./Providers/Ruleset/GFWList.yaml
-  Applications:
-    <<: *rule-classical
-    url: https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/applications.txt
-    path: ./Providers/Ruleset/Applications.yaml
   BiliBili:
     <<: *rule-classical
     url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/BiliBili/BiliBili.yaml
@@ -323,43 +290,36 @@ rule-providers:
     <<: *rule-classical
     url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/GlobalMedia/GlobalMedia.yaml
     path: ./Providers/Ruleset/GlobalMedia.yaml
-  Cncidr:
-    <<: *rule-ipcidr
-    url: https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/cncidr.txt
-    path: ./Providers/Ruleset/Cncidr.yaml
-  # anti-AD的广告过滤 按需启用
-  # Ad:
+  # Ad: # anti-AD的广告过滤 按需启用
   #   <<: *rule-domain
   #   url: https://anti-ad.net/clash.yaml
   #   path: ./Providers/Ruleset/anti-ad-clash.yaml
 
 # 自定义规则
 rules:
-  - RULE-SET,Applications,DIRECT
-  - RULE-SET,Private,DIRECT
-  - RULE-SET,Cncidr,DIRECT
-  - RULE-SET,Direct,DIRECT
+  - GEOIP,LAN,DIRECT # LAN 使用直连
+  - GEOIP,CN,DIRECT # CN 使用直连
   - RULE-SET,Apple,🍎 苹果服务
   - RULE-SET,iCloud,🍎 苹果服务
   - RULE-SET,BiliBili,📺 哔哩哔哩
   - RULE-SET,GlobalMedia,🌍 国外媒体
   - RULE-SET,Proxy,🚀 手动切换
+  - RULE-SET,Private,DIRECT
   # - RULE-SET,Ad,🆎 AdBlock # 广告过滤 按需启用
-  - GEOIP,LAN,DIRECT # GEOIP LAN 和 CN 使用直连
-  - GEOIP,CN,DIRECT # 普通用户这两个就够
   # ========其他自定义规则示例========
   - DOMAIN-SUFFIX,ai.com,🤖 OpenAi # 域名后缀匹配 使用代理组
   - DOMAIN-SUFFIX,openai.com,🤖 OpenAi
   - DOMAIN-SUFFIX,identrust.com,🤖 OpenAi
   - IP-CIDR,162.159.193.0/24,DIRECT # IP 段匹配 Cloudflare
+  - IP-CIDR,91.108.0.0/16,🚀 手动切换,no-resolve
+  - IP-CIDR,109.239.140.0/24,🚀 手动切换,no-resolve
   - DOMAIN-SUFFIX,umeng.co,REJECT # REJECT 广告拦截
   - DOMAIN-SUFFIX,umeng.com,REJECT
   - DOMAIN-SUFFIX,umtrack.com,REJECT
-  - DOMAIN-SUFFIX,a.market.xiaomi.com,REJECT
   - DOMAIN-SUFFIX,ad.xiaomi.com,REJECT
   - DOMAIN-SUFFIX,ad1.xiaomi.com,REJECT
 
   # 上面规则都未命中
-  - MATCH,🐟 漏网之鱼 # 使用漏网之鱼分组,可以理解为黑名单模式
-  # - MATCH, DIRECT # 直连 即白名单模式 配合下方GFWList效果更佳
+  - MATCH,🐟 漏网之鱼 # 使用漏网之鱼分组 可以理解为黑名单模式
+  # - MATCH, DIRECT # 使用直连 即白名单模式 配合下方GFWList效果更佳
   # - RULE-SET,GFWList,🚀 手动切换
