@@ -51,17 +51,9 @@ dns:
   nameserver: [223.5.5.5, 119.29.29.29]
   # 当 fallback 参数被配置时 DNS 请求将同时发送至上方 nameserver 列表和下方 fallback 列表中配置的所有 DNS 服务器
   # 当解析得到的 IP 地址的地理位置不是 CN 时 clash 将会选用 fallback 中 DNS 服务器的解析结果
-  fallback:
-    - 8.8.8.8
-    - 1.1.1.1
-    - tls://dns.google:853
-    - https://cloudflare-dns.com/dns-query
-    - https://dns.google/dns-query
+  fallback: ['tls://1.0.0.1', 'tls://8.8.4.4', 'https://cloudflare-dns.com/dns-query', 'https://dns.google/dns-query']
   # 这些参数是为了对抗DNS投毒 建议在 DNS 投毒严重时启用
-  fallback-filter:
-    geoip: true
-    geoip-code: CN
-    ipcidr: [240.0.0.0/4, 0.0.0.0/32]
+  fallback-filter: { geoip: true, geoip-code: CN, ipcidr: [240.0.0.0/4, 0.0.0.0/32] }
 
 # proxy-providers参数锚点 方便多订阅源复用
 pvd-info: &pvd-info # 更新订阅周期 3天
@@ -101,21 +93,11 @@ proxy-providers:
     path: ./Providers/Proxies/Subscribe.yaml
 
   # 代理组中不支持 filter 在这处理
-  HK-Node:
-    <<: *filter-info
-    filter: "港|HK|(?i)Hong"
-  TW-Node:
-    <<: *filter-info
-    filter: "台|湾|TW|(?i)Taiwan"
-  JP-Node:
-    <<: *filter-info
-    filter: "日|东京|JP|(?i)Japan"
-  SG-Node:
-    <<: *filter-info
-    filter: "新|坡|獅|SG|(?i)Singapore"
-  US-Node:
-    <<: *filter-info
-    filter: "美|US|(?i)States|American"
+  HK-Node: { <<: *filter-info, filter: "港|HK|(?i)Hong" }
+  TW-Node: { <<: *filter-info, filter: "台|湾|TW|(?i)Taiwan" }
+  JP-Node: { <<: *filter-info, filter: "日|东京|JP|(?i)Japan" }
+  SG-Node: { <<: *filter-info, filter: "新|坡|獅|SG|(?i)Singapore" }
+  US-Node: { <<: *filter-info, filter: "美|US|(?i)States|American" }
 
 # 使用proxy-providers中的节点 定义锚点
 all-proxy: &all-proxy
@@ -126,17 +108,12 @@ all-proxy: &all-proxy
 
 # 其他代理 自建等写在这里
 proxies:
-  - name: "ss1"
-    type: ss
-    server: server
-    port: 443
-    cipher: chacha20-ietf-poly1305
-    password: "password"
-    # udp: true
-  # - name: "ss2" ...
-# 其他代理锚点
+  - { name: "ss1", type: ss, server: server, port: 443, cipher: chacha20-ietf-poly1305, password: "password", udp: true}
+  # - { name: "ss2", type: ss, server: server, port: 443, cipher: chacha20-ietf-poly1305, password: "password", udp: true}
+# 定义自建代理锚点
 local-proxy: &local-proxy
   - ss1
+  # - ss2
 
 # 定义自动测速节点
 auto: &auto-select
@@ -152,17 +129,7 @@ auto: &auto-select
 # 定义分流参数锚点
 group-proxy: &group-proxy
   type: select
-  proxies:
-    [
-      🚀 手动切换,
-      ♻️ 自动选择,
-      🇭🇰 香港节点,
-      🇨🇳 台湾节点,
-      🇯🇵 日本节点,
-      🇸🇬 狮城节点,
-      🇺🇲 美国节点,
-      DIRECT,
-    ]
+  proxies: [🚀 手动切换, ♻️ 自动选择, 🇭🇰 香港节点, 🇨🇳 台湾节点, 🇯🇵 日本节点, 🇸🇬 狮城节点, 🇺🇲 美国节点, DIRECT]
 
 # 定义代理分组 与锚点合并
 proxy-groups:
@@ -204,6 +171,7 @@ proxy-groups:
   - name: 🔧 自定节点
     type: select
     proxies: *local-proxy
+
   - name: 🐟 漏网之鱼
     <<: *group-proxy
 
@@ -241,6 +209,7 @@ proxy-groups:
 rule-info: &rule-info
   type: http
   interval: 259200
+
 # classical 不推荐使用 复杂度较高不建议添加太多
 classical: &rule-classical
   behavior: classical
@@ -303,6 +272,9 @@ rules:
   - IP-CIDR,162.159.193.0/24,DIRECT # IP 段匹配 Cloudflare
   - IP-CIDR,91.108.0.0/16,🚀 手动切换,no-resolve
   - IP-CIDR,109.239.140.0/24,🚀 手动切换,no-resolve
+  - DOMAIN-KEYWORD,-cn,DIRECT
+  - DOMAIN-SUFFIX,local,DIRECT
+  - DOMAIN-SUFFIX,cn,DIRECT
   - DOMAIN-SUFFIX,umeng.co,REJECT # REJECT 广告拦截
   - DOMAIN-SUFFIX,umeng.com,REJECT
   - DOMAIN-SUFFIX,umtrack.com,REJECT

@@ -30,22 +30,19 @@ all-proxy: &all-proxy
 
 # 其他代理示例 自建等写在这里
 proxies:
-  - name: "ss1"
-    type: ss
-    server: server
-    port: 443
-    cipher: chacha20-ietf-poly1305
-    password: "password"
-    udp: true
-# - name: "ss2" ...
-# 数量多引用锚点进行合并
-local-proxy: &local-proxy
+  - { name: "ss1", type: ss, server: server, port: 443, cipher: chacha20-ietf-poly1305, password: "password", udp: true }
+  # - { name: "ss2", type: ss, server: server, port: 443, cipher: chacha20-ietf-poly1305, password: "password", udp: true }
+
+# 自建数量多可以定义锚点后进行合并
+# local-proxy: &local-proxy
   - ss1
+  # - ss2
 
 proxy-groups:
   - name: 🚀 手动切换
     <<: *all-proxy
     proxies: [♻️ 自动选择]
+    # proxies: [♻️ 自动选择, ss1, ss2] # 多个节点
   - name: ♻️ 自动选择
     type: url-test
     lazy: true
@@ -54,9 +51,8 @@ proxy-groups:
     use:
       - Subscribe
     proxies:
-      #- ss1 # 把自定义节点添加进自动选择
-      #*local-proxy # 数量多引用锚点进行合并
-
+      # - ss1 # 把自定义节点添加进自动选择
+      # *local-proxy # 自建引用锚点进行合并(不可和手动添加混用)
   - name: 🐟 漏网之鱼
     <<: *all-proxy
     proxies: [🚀 手动切换, DIRECT]
@@ -73,6 +69,9 @@ rules:
   - IP-CIDR,91.108.0.0/16,🚀 手动切换,no-resolve
   - IP-CIDR,109.239.140.0/24,🚀 手动切换,no-resolve
   - IP-CIDR,149.154.160.0/20,🚀 手动切换,no-resolve
+  - DOMAIN-KEYWORD,-cn,DIRECT
+  - DOMAIN-SUFFIX,local,DIRECT
+  - DOMAIN-SUFFIX,cn,DIRECT
   - DOMAIN-SUFFIX,umeng.com,REJECT
   - DOMAIN-SUFFIX,umtrack.com,REJECT
   - DOMAIN-SUFFIX,ad.xiaomi.com,REJECT
